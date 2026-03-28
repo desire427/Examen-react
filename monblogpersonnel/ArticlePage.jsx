@@ -36,15 +36,22 @@ function ArticlePage() {
     if (error) return <div className="container mx-auto px-4 py-12 text-red-600">{error}</div>;
     if (!article) return null;
 
+    // Récupération de l'utilisateur connecté depuis le localStorage
+    const storedUser = localStorage.getItem('user');
+    const currentUser = storedUser ? JSON.parse(storedUser) : null;
+    
+    // Vérification : est-ce que je suis l'auteur de cet article ?
+    const isOwner = currentUser && article && currentUser.id === article.author;
+
     return (
         <main className="container mx-auto px-4 py-12 flex flex-col items-center">
-            <ArticleView article={article} /> {/* Assuming ArticleView is in src/components/Articles/ArticleView.jsx */}
-            {/* Add an Edit button, visible only if the current user is the author */}
-            {/* You'll need to implement logic to check if the current user is the author */}
-            {/* For now, let's assume any logged-in user can see the edit button */}
-            <Link to={`/articles/${article.id}/edit`} className="btn btn-secondary mt-4">
-                Modifier l'article
-            </Link>
+            <ArticleView article={article} />
+            
+            {isOwner && (
+                <Link to={`/articles/${article.id}/edit`} className="btn btn-secondary mt-4">
+                    Modifier l'article
+                </Link>
+            )}
         </main>
     );
 }

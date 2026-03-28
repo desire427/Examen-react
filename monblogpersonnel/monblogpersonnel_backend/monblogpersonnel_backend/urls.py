@@ -23,22 +23,23 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-# Importez vos ViewSets
 from articles.views import ArticleViewSet
 from friends.views import FriendRequestViewSet, FriendListViewSet
 from accounts.serializers import MyTokenObtainPairSerializer
+from accounts.views import RegisterView
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 router = DefaultRouter()
-router.register(r'articles', ArticleViewSet) # Enregistre les URLs pour les articles
+router.register(r'articles', ArticleViewSet)
 router.register(r'friend-requests', FriendRequestViewSet)
 router.register(r'friends', FriendListViewSet, basename='friends')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('api/', include(router.urls)), # <--- Cette ligne manquait !
+    path('api/', include(router.urls)),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/register/', RegisterView.as_view(), name='register'),
 ]

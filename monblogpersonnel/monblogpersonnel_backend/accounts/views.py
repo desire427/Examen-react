@@ -1,3 +1,11 @@
-from django.shortcuts import render
+from rest_framework import generics, permissions
+from django.contrib.auth.models import User
+from .serializers import RegisterSerializer
 
-# Create your views here.
+class RegisterView(generics.CreateAPIView):
+    """
+    Vue permettant l'inscription d'un nouvel utilisateur.
+    """
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = RegisterSerializer
