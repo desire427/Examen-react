@@ -8,6 +8,10 @@ function ArticleList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Récupérer les infos de l'utilisateur connecté
+    const storedUser = localStorage.getItem('user');
+    const currentUser = storedUser && storedUser !== "undefined" ? JSON.parse(storedUser) : null;
+
     useEffect(() => {
         const fetchArticles = async () => {
             try {
@@ -52,7 +56,15 @@ function ArticleList() {
                                     {article.title}
                                 </h4>
                             </Link>
-                            <p className="text-sm text-slate-600">Dernière modification : {new Date(article.updated_at).toLocaleDateString()}</p>
+                            <p className="text-sm text-slate-600">
+                                Par <span className="font-medium text-slate-900">{article.author_username}</span>
+                                {currentUser && currentUser.username === article.author_username && (
+                                    <span className="ml-2 rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-700">
+                                        Moi
+                                    </span>
+                                )}
+                                 • Modifié le {new Date(article.updated_at).toLocaleDateString()}
+                            </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                             <span

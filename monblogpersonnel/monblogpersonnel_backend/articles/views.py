@@ -27,7 +27,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
                 friend_ids.add(u1 if u1 != user.id else u2)
 
             return Article.objects.filter(
-                Q(author=user) | Q(author_id__in=friend_ids, is_public=True, status='published')
+                # On voit ses propres articles (tous) OU les articles publiés de ses amis
+                Q(author=user) | Q(author_id__in=friend_ids, status='published')
             ).distinct().order_by('-created_at')
 
         # Si non connecté : accès refusé (liste vide) pour respecter votre consigne
