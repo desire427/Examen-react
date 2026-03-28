@@ -3,6 +3,7 @@ from .models import Article
 from .serializers import ArticleSerializer
 from django.db.models import Q
 from .permissions import IsOwnerOrReadOnly # Importez votre nouvelle permission
+from friends.models import Friendship, Block
 
 class ArticleViewSet(viewsets.ModelViewSet):
     queryset = Article.objects.all().order_by('-created_at') # Ordonner par date de création décroissante
@@ -17,19 +18,24 @@ class ArticleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_authenticated:
             user = self.request.user
-            # On récupère les IDs des amis de manière plus stable
-            from friends.models import Friendship
+            
+            # 1. Identifier les personnes bloquées (ceux que j'ai bloqués ET ceux qui m'ont bloqué)
+            blocked_by_me = Block.objects.filter(blocker=user).values_list('blocked_id', flat=True)
+            blocked_me = Block.objects.filter(blocked=user).values_list('blocker_id', flat=True)
+            all_blocked_ids = set(blocked_by_me) | set(blocked_me)
+
+            # 2. Récupérer les IDs des amis
             friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).values_list('user1_id', 'user2_id')
             
-            # On extrait l'ID de l'autre personne dans chaque amitié
             friend_ids = set()
             for u1, u2 in friendships:
-                friend_ids.add(u1 if u1 != user.id else u2)
+                other_id = u1 if u1 != user.id else u2
+                if other_id not in all_blocked_ids:
+                    friend_ids.add(other_id)
 
             return Article.objects.filter(
-                # On voit ses propres articles (tous) OU les articles publiés de ses amis
                 Q(author=user) | Q(author_id__in=friend_ids, status='published')
-            ).distinct().order_by('-created_at')
+            ).exclude(author_id__in=all_blocked_ids).distinct().order_by('-created_at')
 
         # Si non connecté : accès refusé (liste vide) pour respecter votre consigne
         return Article.objects.none()

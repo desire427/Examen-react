@@ -9,7 +9,6 @@ function ArticleEdit({ article }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Implement edit article logic (API call)
         console.log("Article Edited")
     };
 

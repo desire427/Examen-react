@@ -9,7 +9,6 @@ function ArticleCreate() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Implement create article logic (API call)
         console.log("Article Created");
     };
 

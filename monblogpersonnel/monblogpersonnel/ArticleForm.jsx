@@ -6,7 +6,6 @@ function ArticleForm({ initialData = {}, onSubmit, isEditing = false }) {
     const [isPublic, setIsPublic] = useState(initialData.is_public || false);
     const [status, setStatus] = useState(initialData.status || 'draft');
 
-    // Update form fields if initialData changes (e.g., when fetching article for edit)
     useEffect(() => {
         if (isEditing && initialData) {
             setTitle(initialData.title || '');

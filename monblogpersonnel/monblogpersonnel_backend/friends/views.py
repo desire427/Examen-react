@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import FriendRequest, Friendship
+from .models import FriendRequest, Friendship, Block
 from .serializers import FriendRequestSerializer, FriendshipSerializer
 from accounts.serializers import UserSerializer
 
@@ -69,12 +69,17 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Demande d\'ami rejetée.'}, status=status.HTTP_200_OK)
 
 class FriendListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        # Récupère tous les amis de l'utilisateur (user1 ou user2 dans la table Friendship)
+        # Pour l'action de liste par défaut, on ne retourne que les amis.
+        # Pour les autres actions (block, unblock), on permet l'accès à tous les utilisateurs.
+        if self.action != 'list':
+            return User.objects.all()
+            
         friends_ids = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).values_list('user1__id', 'user2__id')
         friends_ids = [id for pair in friends_ids for id in pair if id != user.id]
         return User.objects.filter(id__in=friends_ids).order_by('username')
@@ -88,6 +93,34 @@ class FriendListViewSet(viewsets.ReadOnlyModelViewSet):
         Friendship.objects.filter(Q(user1=user, user2=friend_to_remove) | Q(user1=friend_to_remove, user2=user)).delete()
         FriendRequest.objects.filter(Q(from_user=user, to_user=friend_to_remove) | Q(from_user=friend_to_remove, to_user=user)).delete() # Supprime aussi les requêtes passées
         return Response({'detail': 'Ami supprimé.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def block(self, request, pk=None):
+        user_to_block = self.get_object()
+        user = request.user
+
+        # 1. Créer le blocage permanent
+        Block.objects.get_or_create(blocker=user, blocked=user_to_block)
+
+        # 2. Supprime l'amitié et les requêtes existantes
+        Friendship.objects.filter(Q(user1=user, user2=user_to_block) | Q(user1=user_to_block, user2=user)).delete()
+        FriendRequest.objects.filter(Q(from_user=user, to_user=user_to_block) | Q(from_user=user_to_block, to_user=user)).delete()
+        return Response({'detail': 'Utilisateur bloqué.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def unblock(self, request, pk=None):
+        user_to_unblock = self.get_object()
+        user = request.user
+        Block.objects.filter(blocker=user, blocked=user_to_unblock).delete()
+        return Response({'detail': 'Utilisateur débloqué.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def blocked_list(self, request):
+        user = request.user
+        blocked_ids = Block.objects.filter(blocker=user).values_list('blocked_id', flat=True)
+        blocked_users = User.objects.filter(id__in=blocked_ids).order_by('username')
+        serializer = self.get_serializer(blocked_users, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def search(self, request):
