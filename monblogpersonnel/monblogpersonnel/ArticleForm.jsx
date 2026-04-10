@@ -4,6 +4,7 @@ function ArticleForm({ initialData = {}, onSubmit, isEditing = false }) {
     const [title, setTitle] = useState(initialData.title || '');
     const [content, setContent] = useState(initialData.content || '');
     const [isPublic, setIsPublic] = useState(initialData.is_public || false);
+    const [allowComments, setAllowComments] = useState(initialData.allow_comments ?? true);
     const [status, setStatus] = useState(initialData.status || 'draft');
 
     useEffect(() => {
@@ -11,13 +12,14 @@ function ArticleForm({ initialData = {}, onSubmit, isEditing = false }) {
             setTitle(initialData.title || '');
             setContent(initialData.content || '');
             setIsPublic(initialData.is_public || false);
+            setAllowComments(initialData.allow_comments ?? true);
             setStatus(initialData.status || 'draft');
         }
     }, [initialData, isEditing]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit({ title, content, is_public: isPublic, status });
+        onSubmit({ title, content, is_public: isPublic, allow_comments: allowComments, status });
     };
 
     return (
@@ -46,6 +48,10 @@ function ArticleForm({ initialData = {}, onSubmit, isEditing = false }) {
             <div className="flex items-center gap-2">
                 <input type="checkbox" id="isPublic" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="checkbox" />
                 <label htmlFor="isPublic" className="text-sm font-medium text-slate-700">Rendre public</label>
+            </div>
+            <div className="flex items-center gap-2">
+                <input type="checkbox" id="allowComments" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} className="checkbox" />
+                <label htmlFor="allowComments" className="text-sm font-medium text-slate-700">Autoriser les commentaires</label>
             </div>
             <div>
                 <label htmlFor="status" className="text-sm font-medium text-slate-700">Statut</label>

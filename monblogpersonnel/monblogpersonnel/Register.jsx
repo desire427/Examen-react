@@ -1,16 +1,36 @@
 // src/components/Auth/Register.jsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function Register() {
     const [fullName, setFullName] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Implement registration logic here (API call)
-        console.log('Registered', { fullName, username });
+        try {
+            // Tentez d'abord avec /api/register/ si /api/accounts/register/ donne une 404.
+            // Vérifiez bien votre fichier monblogpersonnel_backend/urls.py
+            const response = await axios.post('http://127.0.0.1:8000/api/register/', {
+                full_name: fullName,
+                username: username,
+                password: password,
+            });
+            
+            console.log('Inscription réussie:', response.data);
+            alert('Compte créé avec succès ! Connectez-vous maintenant.');
+            navigate('/login'); // Redirection vers la page de connexion
+        } catch (error) {
+            console.error("Erreur lors de l'inscription:", error);
+            if (error.response?.status === 404) {
+                alert("Erreur 404 : Le serveur ne trouve pas la route d'inscription. Vérifiez vos URLs Django.");
+            } else {
+                alert("L'inscription a échoué : " + (error.response?.data?.detail || "Vérifiez vos informations"));
+            }
+        }
     };
 
     return (

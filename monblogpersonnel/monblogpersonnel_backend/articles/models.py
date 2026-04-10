@@ -6,6 +6,7 @@ class Article(models.Model):
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='articles')
     is_public = models.BooleanField(default=True)
+    allow_comments = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, default='published') # 'published' ou 'draft'

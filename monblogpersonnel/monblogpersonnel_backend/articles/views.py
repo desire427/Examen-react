@@ -1,4 +1,6 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Article
 from .serializers import ArticleSerializer
 from django.db.models import Q
@@ -39,3 +41,16 @@ class ArticleViewSet(viewsets.ModelViewSet):
 
         # Si non connecté : accès refusé (liste vide) pour respecter votre consigne
         return Article.objects.none()
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def comment(self, request, pk=None):
+        article = self.get_object()
+        
+        if not article.allow_comments:
+            return Response({'detail': 'Les commentaires sont désactivés pour cet article.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Logique simplifiée : ici tu devrais normalement utiliser un CommentSerializer
+        # content = request.data.get('content')
+        # Comment.objects.create(article=article, author=request.user, content=content)
+        
+        return Response({'detail': 'Commentaire reçu (Logique de sauvegarde à finaliser avec le modèle Comment).'}, status=status.HTTP_201_CREATED)
